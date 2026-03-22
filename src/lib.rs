@@ -6,9 +6,9 @@ mod unix;
 mod windows;
 
 #[cfg(unix)]
-use unix::*;
+use unix::try_fast_preallocate;
 #[cfg(windows)]
-use windows::*;
+use windows::try_fast_preallocate;
 
 pub trait FileAlloc {
     fn allocate(&mut self, size: u64) -> impl Future<Output = io::Result<()>> + Send + Sync + '_;
@@ -36,6 +36,7 @@ async fn async_zero_fill(
     file.seek(SeekFrom::Start(current_size)).await?;
     while current_size < target_size {
         let remaining = target_size - current_size;
+        #[allow(clippy::cast_possible_truncation)]
         let to_write = CHUNK_SIZE.min(remaining as usize);
         let n = file.write(&ZEROS[..to_write]).await?;
         if n == 0 {
@@ -111,6 +112,7 @@ mod tests {
             .await?;
 
         // 分配 2.5MB，超过 1MB 的 CHUNK_SIZE
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         let target_size = (2.5 * 1024.0 * 1024.0) as u64;
         file.allocate(target_size).await?;
 

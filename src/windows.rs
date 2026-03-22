@@ -18,7 +18,12 @@ pub async fn try_fast_preallocate(file: &File, current_size: u64, size: u64) -> 
     let res = tokio::task::spawn_blocking(move || -> io::Result<bool> {
         enable_windows_privilege();
         let handle = file.as_raw_handle() as HANDLE;
-        let success = unsafe { SetFileValidData(handle, size as i64) != 0 };
+        let success = unsafe {
+            SetFileValidData(
+                handle,
+                i64::try_from(size).map_err(|_| io::ErrorKind::FileTooLarge)?,
+            ) != 0
+        };
         if !success {
             file.set_len(current_size)?;
         }
@@ -35,14 +40,14 @@ fn enable_windows_privilege() {
         if OpenProcessToken(
             GetCurrentProcess(),
             TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
-            &mut token,
+            &raw mut token,
         ) == 0
         {
             return;
         }
         let mut luid: LUID = std::mem::zeroed();
         let priv_name = b"SeManageVolumePrivilege\0";
-        if LookupPrivilegeValueA(ptr::null(), priv_name.as_ptr(), &mut luid) == 0 {
+        if LookupPrivilegeValueA(ptr::null(), priv_name.as_ptr(), &raw mut luid) == 0 {
             return;
         }
         let tp = TOKEN_PRIVILEGES {
@@ -52,6 +57,6 @@ fn enable_windows_privilege() {
                 Attributes: SE_PRIVILEGE_ENABLED,
             }],
         };
-        AdjustTokenPrivileges(token, 0, &tp, 0, ptr::null_mut(), ptr::null_mut());
+        AdjustTokenPrivileges(token, 0, &raw const tp, 0, ptr::null_mut(), ptr::null_mut());
     }
 }
