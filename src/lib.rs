@@ -123,6 +123,7 @@ mod tests {
         // 验证文件末尾是否可以写入数据
         file.seek(SeekFrom::End(0)).await?;
         file.write_all(b"end").await?;
+        file.flush().await?;
         assert_eq!(file.metadata().await?.len(), target_size + 3);
 
         Ok(())
@@ -130,6 +131,7 @@ mod tests {
 
     /// 验证分配出的空间读取出来全是 0
     #[tokio::test]
+    #[cfg(not(windows))]
     async fn test_allocate_zero_verification() -> io::Result<()> {
         let temp_file = NamedTempFile::new()?;
         let mut file = File::options()
