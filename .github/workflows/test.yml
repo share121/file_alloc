@@ -35,11 +35,12 @@ jobs:
         run: cargo hack clippy --feature-powerset
 
   test:
-    name: Test
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.os }} - ${{ matrix.channel }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         channel: [stable, beta, nightly]
     steps:
       - uses: actions/checkout@v4
@@ -47,8 +48,10 @@ jobs:
         with:
           toolchain: ${{ matrix.channel }}
       - uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.channel }}
       - name: Install cargo-hack
-        run: cargo install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
       - name: Run Tests
         run: cargo hack test --feature-powerset --depth 1 --verbose
 
