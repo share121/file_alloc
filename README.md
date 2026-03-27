@@ -15,10 +15,12 @@
 - **轻量**：只依赖与 `tokio`、`rustix`、`windows-sys`
 
 ```rust
-use file_alloc::FileAlloc;
+use file_alloc::{init_fast_alloc, FileAlloc};
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    init_fast_alloc(); // 必须在打开文件前调用，否则无法享受快分配
+
     let temp_file = tempfile::NamedTempFile::new()?;
     let mut file = tokio::fs::File::options()
         .read(true)
