@@ -3,7 +3,7 @@
 use std::{io, os::windows::io::AsRawHandle, ptr, sync::OnceLock};
 use tokio::fs::File;
 use windows_sys::Win32::{
-    Foundation::{CloseHandle, ERROR_SUCCESS, GetLastError, HANDLE, LUID},
+    Foundation::{CloseHandle, GetLastError, ERROR_SUCCESS, HANDLE, LUID},
     Security::{
         AdjustTokenPrivileges, LookupPrivilegeValueA, SE_PRIVILEGE_ENABLED,
         TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES, TOKEN_QUERY,

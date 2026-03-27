@@ -1,6 +1,6 @@
 #![cfg(unix)]
 
-use rustix::fs::{FallocateFlags, fallocate};
+use rustix::fs::{fallocate, FallocateFlags};
 use std::io;
 use tokio::fs::File;
 
