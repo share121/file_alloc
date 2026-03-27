@@ -5,7 +5,7 @@ use std::io;
 use tokio::fs::File;
 
 /// Unix 下不需要提权，提供统一接口并直接返回 true
-#[must_use]
+#[allow(clippy::must_use_candidate)]
 pub const fn init_fast_alloc() -> bool {
     true
 }
