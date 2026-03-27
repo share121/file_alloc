@@ -2,13 +2,13 @@
 name = "file_alloc"
 version = "0.1.0"
 description = "跨平台、高性能、兼容性好的文件大小分配库"
-edition = "2024"
+edition = "2021"
 authors = ["share121 <me@s121.top>"]
 homepage = "https://github.com/share121/file_alloc"
 repository = "https://github.com/share121/file_alloc"
 license = "MIT"
 keywords = ["file", "allocation", "preallocate", "cross-platform"]
-categories = ["filesystem", "development-tools", "system"]
+categories = ["filesystem", "asynchronous", "os"]
 
 [dependencies]
 tokio = { version = "1.50.0", features = ["fs", "io-util", "rt"] }

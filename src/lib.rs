@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 use std::io::{self, SeekFrom};
+use std::future::Future;
 use tokio::fs::File;
 use tokio::io::{AsyncSeekExt, AsyncWriteExt};
 
