@@ -41,6 +41,8 @@ jobs:
         with:
           tool: cargo-hack
       - name: Run Clippy
+        env:
+          RUSTFLAGS: "-D warnings"
         run: cargo hack clippy --feature-powerset
 
   test:
