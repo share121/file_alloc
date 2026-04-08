@@ -3,7 +3,7 @@
 use std::{io, os::windows::io::AsRawHandle, ptr, sync::OnceLock};
 use tokio::fs::File;
 use windows_sys::Win32::{
-    Foundation::{CloseHandle, GetLastError, ERROR_SUCCESS, HANDLE, LUID},
+    Foundation::{CloseHandle, GetLastError, ERROR_NOT_ALL_ASSIGNED, ERROR_SUCCESS, HANDLE, LUID},
     Security::{
         AdjustTokenPrivileges, LookupPrivilegeValueA, SE_PRIVILEGE_ENABLED,
         TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES, TOKEN_QUERY,
@@ -41,8 +41,10 @@ pub fn init_fast_alloc() -> bool {
                 Attributes: SE_PRIVILEGE_ENABLED,
             }],
         };
-        AdjustTokenPrivileges(token, 0, &raw const tp, 0, ptr::null_mut(), ptr::null_mut());
-        let success = GetLastError() == ERROR_SUCCESS;
+        let success =
+            AdjustTokenPrivileges(token, 0, &raw const tp, 0, ptr::null_mut(), ptr::null_mut())
+                != 0
+                && matches!(GetLastError(), ERROR_SUCCESS | ERROR_NOT_ALL_ASSIGNED);
         CloseHandle(token);
         success
     })
@@ -68,6 +70,6 @@ pub async fn try_fast_preallocate(file: &File, current_size: u64, size: u64) -> 
         Ok(success)
     })
     .await
-    .unwrap_or(Ok(false))?;
+    .map_err(io::Error::other)??;
     Ok(res)
 }

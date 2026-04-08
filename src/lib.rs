@@ -17,6 +17,10 @@ use windows::try_fast_preallocate;
 pub use unix::init_fast_alloc;
 #[cfg(windows)]
 pub use windows::init_fast_alloc;
+#[cfg(not(any(windows, unix)))]
+pub fn init_fast_alloc() -> bool {
+    false
+}
 
 pub trait FileAlloc {
     fn allocate(&mut self, size: u64) -> impl Future<Output = io::Result<()>> + Send + Sync + '_;
