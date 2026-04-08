@@ -17,7 +17,7 @@ pub async fn try_fast_preallocate(file: &File, current_size: u64, size: u64) -> 
             &std_file,
             FallocateFlags::empty(),
             current_size,
-            (size - current_size),
+            size - current_size,
         ) {
             Ok(()) => Ok(true),
             Err(_) => Ok(false),
