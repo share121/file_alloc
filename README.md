@@ -2,6 +2,7 @@
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/share121/file_alloc/main)](https://github.com/share121/file_alloc/commits/main)
 [![Test](https://github.com/share121/file_alloc/workflows/Test/badge.svg)](https://github.com/share121/file_alloc/actions)
+[![codecov](https://codecov.io/gh/share121/file_alloc/branch/main/graph/badge.svg)](https://codecov.io/gh/share121/file_alloc)
 [![Latest version](https://img.shields.io/crates/v/file_alloc.svg)](https://crates.io/crates/file_alloc)
 [![Documentation](https://docs.rs/file_alloc/badge.svg)](https://docs.rs/file_alloc)
 [![License](https://img.shields.io/crates/l/file_alloc.svg)](https://github.com/share121/file_alloc/blob/main/LICENSE)
