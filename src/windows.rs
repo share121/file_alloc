@@ -90,6 +90,12 @@ mod tests {
     /// 无提权时快路径应返回失败且不改动文件
     #[tokio::test]
     async fn test_try_fast_preallocate_no_privilege() -> std::io::Result<()> {
+        // 本测试前提：进程没有 SeManageVolumePrivilege。
+        // admin 进程上该特权可用，init_fast_alloc() 返回 true，快路径会真正执行，
+        // 此时「无提权」前提不成立，跳过本测试。
+        if init_fast_alloc() {
+            return Ok(());
+        }
         let temp_file = NamedTempFile::new()?;
         let file = File::options()
             .read(true)
