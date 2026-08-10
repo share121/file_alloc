@@ -3,7 +3,7 @@
 use std::{io, os::windows::io::AsRawHandle, ptr, sync::OnceLock};
 use tokio::fs::File;
 use windows_sys::Win32::{
-    Foundation::{CloseHandle, GetLastError, ERROR_NOT_ALL_ASSIGNED, ERROR_SUCCESS, HANDLE, LUID},
+    Foundation::{CloseHandle, GetLastError, ERROR_SUCCESS, HANDLE, LUID},
     Security::{
         AdjustTokenPrivileges, LookupPrivilegeValueA, SE_PRIVILEGE_ENABLED,
         TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES, TOKEN_QUERY,
@@ -44,7 +44,7 @@ pub fn init_fast_alloc() -> bool {
         let success =
             AdjustTokenPrivileges(token, 0, &raw const tp, 0, ptr::null_mut(), ptr::null_mut())
                 != 0
-                && matches!(GetLastError(), ERROR_SUCCESS | ERROR_NOT_ALL_ASSIGNED);
+                && GetLastError() == ERROR_SUCCESS;
         CloseHandle(token);
         success
     })
@@ -72,4 +72,34 @@ pub async fn try_fast_preallocate(file: &File, current_size: u64, size: u64) -> 
     .await
     .map_err(io::Error::other)??;
     Ok(res)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::NamedTempFile;
+    use tokio::fs::File;
+
+    /// 初始化快分配不应出错，且多次调用返回一致的缓存值
+    #[test]
+    fn test_init_fast_alloc_idempotent() {
+        let first = init_fast_alloc();
+        assert_eq!(first, init_fast_alloc());
+    }
+
+    /// 无提权时快路径应返回失败且不改动文件
+    #[tokio::test]
+    async fn test_try_fast_preallocate_no_privilege() -> std::io::Result<()> {
+        let temp_file = NamedTempFile::new()?;
+        let file = File::options()
+            .read(true)
+            .write(true)
+            .open(temp_file.path())
+            .await?;
+
+        let result = try_fast_preallocate(&file, 0, 1024).await;
+        assert!(matches!(result, Ok(false)));
+        assert_eq!(std::fs::metadata(temp_file.path())?.len(), 0);
+        Ok(())
+    }
 }
