@@ -12,6 +12,10 @@ mod windows;
 use unix::try_fast_preallocate;
 #[cfg(windows)]
 use windows::try_fast_preallocate;
+#[cfg(not(any(windows, unix)))]
+async fn try_fast_preallocate(_file: &File, _current_size: u64, _size: u64) -> io::Result<bool> {
+    Ok(false)
+}
 
 #[cfg(unix)]
 pub use unix::init_fast_alloc;
@@ -23,10 +27,23 @@ pub fn init_fast_alloc() -> bool {
 }
 
 pub trait FileAlloc {
+    fn try_allocate(
+        &mut self,
+        size: u64,
+    ) -> impl Future<Output = io::Result<bool>> + Send + Sync + '_;
     fn allocate(&mut self, size: u64) -> impl Future<Output = io::Result<()>> + Send + Sync + '_;
 }
 
 impl FileAlloc for File {
+    async fn try_allocate(&mut self, size: u64) -> io::Result<bool> {
+        let current_size = self.metadata().await?.len();
+        if current_size >= size {
+            Ok(true)
+        } else {
+            try_fast_preallocate(self, current_size, size).await
+        }
+    }
+
     async fn allocate(&mut self, size: u64) -> io::Result<()> {
         let current_size = self.metadata().await?.len();
         if current_size >= size
@@ -71,11 +88,6 @@ async fn async_zero_fill(
     }
     file.flush().await?;
     Ok(())
-}
-
-#[cfg(not(any(windows, unix)))]
-async fn try_fast_preallocate(_file: &File, _current_size: u64, _size: u64) -> io::Result<bool> {
-    Ok(false)
 }
 
 #[cfg(test)]
